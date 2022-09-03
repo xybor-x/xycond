@@ -19,7 +19,7 @@ It makes source code to be shorter and more readable by using inline commands.
 This package has the following features:
 
 -   Assert a condition, panic in case condition is false.
--   Expect a condition to occur and perform actions on this expectation.
+-   Expect a condition to occur and perform testing on this expectation.
 
 # Example
 

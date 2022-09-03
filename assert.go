@@ -122,6 +122,18 @@ func AssertErrorNot(err error, targets ...error) {
 	ExpectErrorNot(err, targets...).assert()
 }
 
+// AssertIn panics if the element is in the object which must be an array,
+// slice, string, or map.
+func AssertIn(object any, element any) {
+	ExpectIn(object, element).assert()
+}
+
+// AssertNotIn panics if the element is not in the object which must be an
+// array, slice, string, or map.
+func AssertNotIn(object any, element any) {
+	ExpectNotIn(object, element).assert()
+}
+
 // AssertTrue panics if the condition is false.
 func AssertTrue(b bool) {
 	ExpectTrue(b).assert()
