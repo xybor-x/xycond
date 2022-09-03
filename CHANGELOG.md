@@ -1,6 +1,7 @@
 # Developing
 
 -   Add ExpectIn supports to check if an element is in object.
+-   Fix bugs.
 
 # V0.0.1 (Sep 02, 2022)
 
