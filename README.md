@@ -19,29 +19,53 @@ It makes source code to be shorter and more readable by using inline commands.
 This package has the following features:
 
 -   Assert a condition, panic in case condition is false.
--   Expect a condition to occur and perform testing on this expectation.
+-   Expect a condition to occur and perform actions on this expectation.
+-   Panic with an assertion error.
 
 # Example
+
+1.  Assert conditions
 
 ```golang
 xycond.AssertFalse(1 == 2)
 
 var x int
 xycond.AssertZero(x)
+```
 
+2.  Testing
+
+```golang
 // Test a condition with *testing.T or *testing.B.
-var t = &testing.T{}
-xycond.ExpectEmpty("").Test(t)
+func TestSomething(t *testing.T) {
+    xycond.ExpectEmpty("").Test(t)
+}
+```
 
+3.  Perform actions on expectation
+
+```golang
 // Perform actions on an expectation.
 xycond.ExpectEqual(1, 2).
-	True(func() {
-		fmt.Printf("1 == 2")
-	}).
-	False(func() {
-		fmt.Printf("1 != 2")
-	})
+    True(func() {
+        fmt.Printf("1 == 2")
+    }).
+    False(func() {
+        fmt.Printf("1 != 2")
+    })
 
 // Output:
 // 1 != 2
+```
+
+4.  Panic with formatted string
+
+```golang
+func foo() {
+    xycond.Panicf("foo %s", "bar")
+}
+
+func bar() int {
+    return xycond.Panic("buzzz").(int)
+}
 ```
