@@ -122,6 +122,27 @@ func TestExpectError(t *testing.T) {
 	xycond.ExpectErrorNot(err, xyerror.AssertionError).Test(t)
 }
 
+func TestExpectInWithMap(t *testing.T) {
+	var m = map[int]string{1: "foo", 2: "bar"}
+	xycond.ExpectIn(m, 1).Test(t)
+	xycond.ExpectIn(m, 2).Test(t)
+	xycond.ExpectNotIn(m, 3).Test(t)
+}
+
+func TestExpectInWithArray(t *testing.T) {
+	var a = []float64{0.1, 0.2}
+	xycond.ExpectIn(a, 0.1).Test(t)
+	xycond.ExpectIn(a, 0.2).Test(t)
+	xycond.ExpectNotIn(a, 0.3).Test(t)
+}
+
+func TestExpectInWithString(t *testing.T) {
+	var s = "foo bar"
+	xycond.ExpectIn(s, "foo").Test(t)
+	xycond.ExpectIn(s, 'b').Test(t)
+	xycond.ExpectNotIn(s, "buzz").Test(t)
+}
+
 func TestExpectTrue(t *testing.T) {
 	xycond.ExpectTrue(true).Test(t)
 	xycond.ExpectFalse(false).Test(t)
