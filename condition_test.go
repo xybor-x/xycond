@@ -57,6 +57,9 @@ func TestExpectNil(t *testing.T) {
 	var a = make([]int, 0)
 	xycond.ExpectNotNil(a).Test(t)
 	xycond.ExpectNotNil(new(int)).Test(t)
+
+	var err error = xyerror.AssertionError.New("foo")
+	xycond.ExpectNotNil(err).Test(t)
 }
 
 func TestExpectEmpty(t *testing.T) {

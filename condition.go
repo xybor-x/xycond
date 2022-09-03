@@ -108,12 +108,24 @@ func ExpectNotZero[T number](a T) Condition {
 
 // ExpectNil returns a true Condition if the parameter is nil.
 func ExpectNil(a any) Condition {
-	var va = reflect.ValueOf(a)
-	return Condition{
-		result:   a == nil || va.IsNil(),
+	var cond = Condition{
+		result:   false,
 		trueMsg:  "got a nil value",
 		falseMsg: fmt.Sprintf("got a not-nil value: %v", a),
 	}
+
+	if a == nil {
+		cond.result = true
+	} else {
+		var va = reflect.ValueOf(a)
+		var expect = ExpectIs(a, reflect.Chan, reflect.Func, reflect.Interface,
+			reflect.Map, reflect.Pointer, reflect.Slice)
+		if expect.result && va.IsNil() {
+			cond.result = true
+		}
+	}
+
+	return cond
 }
 
 // ExpectNotNil returns a true Condition if the parameter is not nil.

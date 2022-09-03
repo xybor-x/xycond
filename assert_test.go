@@ -52,6 +52,9 @@ func TestAssertNil(t *testing.T) {
 	var a = make([]int, 0)
 	xycond.AssertNotNil(a)
 	xycond.AssertNotNil(new(int))
+
+	var err error = xyerror.AssertionError.New("foo")
+	xycond.AssertNotNil(err)
 }
 
 func TestAssertEmpty(t *testing.T) {
