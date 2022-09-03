@@ -128,7 +128,7 @@ func ExpectEmpty(a any) Condition {
 	return Condition{
 		result:   va.Len() == 0,
 		trueMsg:  fmt.Sprintf("got an empty %s", va.Kind()),
-		falseMsg: fmt.Sprintf("got %s with %d element(s)", va.Kind(), va.Len()),
+		falseMsg: fmt.Sprintf("got a not empty %s (%v)", va.Kind(), a),
 	}
 }
 
