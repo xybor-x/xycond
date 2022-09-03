@@ -327,9 +327,14 @@ func ExpectFalse(b bool) Condition {
 	return ExpectTrue(b).revert()
 }
 
-// Panic panics with a formatted string.
-func Panic(msg string, a ...any) {
+// Panicf panics with a formatted string.
+func Panicf(msg string, a ...any) any {
 	panic(xyerror.AssertionError.Newf(msg, a...))
+}
+
+// Panicf panics with default formatted objects.
+func Panic(a ...any) any {
+	panic(xyerror.AssertionError.New(a...))
 }
 
 // JustPanic panics immediately.
