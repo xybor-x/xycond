@@ -1,10 +1,6 @@
 #### Issue
 
--   Jira or Github issue link.
-
-#### Description
-
--   Problem, Solution.
+-   Issue link.
 
 #### Changes
 
