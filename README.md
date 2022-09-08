@@ -31,6 +31,8 @@ xycond.AssertFalse(1 == 2)
 
 var x int
 xycond.AssertZero(x)
+
+xycond.ExpectFalse(true).Assert("this is a custom assertion message")
 ```
 
 2.  Testing
