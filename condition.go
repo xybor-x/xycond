@@ -362,6 +362,20 @@ func (c Condition) Test(f failer) {
 	}
 }
 
+// Assert prints the message and panics if it is a false Condition.
+func (c Condition) Assert(msg string) {
+	if !c.result {
+		Panic(msg)
+	}
+}
+
+// Assertf prints the format message and panics if it is a false Condition.
+func (c Condition) Assertf(msg string, a ...any) {
+	if !c.result {
+		Panic(fmt.Sprintf(msg, a...))
+	}
+}
+
 // True is performed when Condition is true.
 func (c Condition) True(f func()) Condition {
 	if c.result {

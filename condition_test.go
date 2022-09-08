@@ -150,3 +150,14 @@ func TestExpectTrue(t *testing.T) {
 	xycond.ExpectTrue(true).Test(t)
 	xycond.ExpectFalse(false).Test(t)
 }
+
+func TestExpectAssert(t *testing.T) {
+	xycond.ExpectPanic(func() { xycond.ExpectFalse(true).Assert("") }).Test(t)
+	xycond.ExpectPanic(func() { xycond.ExpectFalse(true).Assertf("") }).Test(t)
+}
+
+func TestPanic(t *testing.T) {
+	xycond.ExpectPanic(func() { xycond.Panic("") }).Test(t)
+	xycond.ExpectPanic(func() { xycond.Panicf("") }).Test(t)
+	xycond.ExpectPanic(func() { xycond.JustPanic() }).Test(t)
+}
