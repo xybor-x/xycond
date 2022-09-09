@@ -74,26 +74,30 @@ func ExpectNotGreaterThan[t number](a, b t) Condition {
 
 // ExpectPanic returns a true Condition if it found a panic after calling
 // function.
-func ExpectPanic(f func()) (c Condition) {
+func ExpectPanic(r any, f func()) (c Condition) {
 	defer func() {
-		var r = recover()
-		if r == nil {
-			c.result = false
-			c.falseMsg = "no panic found"
+		var data = recover()
+		if target, ok := r.(error); ok {
+			if err, ok := data.(error); ok {
+				c.result = errors.Is(err, target)
+			} else {
+				c.result = false
+			}
 		} else {
-			c.result = true
-			c.trueMsg = fmt.Sprintf("got a panic: %v", r)
+			c.result = data == r
+		}
+
+		if r == nil {
+			c.trueMsg = "no panic occurred"
+			c.falseMsg = fmt.Sprintf("got a panic (%v)", data)
+		} else {
+			c.trueMsg = fmt.Sprintf("got the correct panic (%v)", data)
+			c.falseMsg = fmt.Sprintf("got an incorrect panic (%v)", data)
 		}
 	}()
 
 	f()
 	return
-}
-
-// ExpectPanic returns a true Condition if it doesn't found any panic after
-// calling function.
-func ExpectNotPanic(f func()) (c Condition) {
-	return ExpectPanic(f).revert()
 }
 
 // ExpectZero returns a true Condition if the parameter is zero.

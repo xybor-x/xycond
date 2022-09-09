@@ -1,2 +1,6 @@
-github.com/xybor-x/xyerror v0.0.0-20220901042203-f9c9aa62f89b h1:U47bSUaMa6UbbW+Tdi8P29r6yTw40UkjNrz8nQRqKtQ=
-github.com/xybor-x/xyerror v0.0.0-20220901042203-f9c9aa62f89b/go.mod h1:GziY0Y0oIPYk9hCI7JoFcnDvQhO9S4EdTqIyhh8iFO0=
+github.com/xybor-x/xyerror v0.1.0-alpha h1:AcWlM52PfdFFHLc/dEAk6vT5lb4+gnuPdOODq7gQ5VM=
+github.com/xybor-x/xyerror v0.1.0-alpha/go.mod h1:2P0SjxOPAkdllEpPhmlWYVOGKDVxzwl/RkmLcc2i9Os=
+github.com/xybor-x/xylock v0.0.1 h1:/LhbJb6WJkUW+xE4/bBpIC76BKrbgnayiId6LdouqUw=
+github.com/xybor-x/xylock v0.0.1/go.mod h1:IQvixGhBrgKdh0HcCJAqzYzk482SGyYOzezBxK6UdRc=
+golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde h1:ejfdSekXMDxDLbRrJMwUk6KnSLZ2McaUCVcIKM+N6jc=
+golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
