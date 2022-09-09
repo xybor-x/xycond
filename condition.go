@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/xybor-x/xyerror"
@@ -255,56 +256,46 @@ func ExpectErrorNot(err error, targets ...error) Condition {
 
 // ExpectIn returns a true Condition if the element is in the object which must
 // be an array, slice, string, or map.
-func ExpectIn(object any, element any) Condition {
-	AssertIs(object, reflect.Array, reflect.Slice, reflect.String, reflect.Map)
+func ExpectIn(elem any, obj any) Condition {
+	AssertIs(obj, reflect.Array, reflect.Slice, reflect.String, reflect.Map)
 
-	var objectV = reflect.ValueOf(object)
-	var elementV = reflect.ValueOf(element)
+	var objV = reflect.ValueOf(obj)
+	var elemV = reflect.ValueOf(elem)
 
-	switch objectV.Kind() {
+	var result = false
+
+	switch objV.Kind() {
 	case reflect.Map:
-		AssertEqual(objectV.Type().Key(), elementV.Type())
-		var v = objectV.MapIndex(elementV)
-		return Condition{
-			result:   v != reflect.Value{},
-			trueMsg:  fmt.Sprintf("element %v existed in map", element),
-			falseMsg: fmt.Sprintf("element %v doesn't exist in map", element),
-		}
+		AssertEqual(objV.Type().Key(), elemV.Type())
+		result = objV.MapIndex(elemV) != reflect.Value{}
 	case reflect.Slice, reflect.Array:
-		AssertEqual(objectV.Type().Elem(), elementV.Type())
-		var cond = Condition{
-			result:   false,
-			trueMsg:  fmt.Sprintf("element %v existed in array", element),
-			falseMsg: fmt.Sprintf("element %v doesn't exist in array", element),
-		}
-		for i := 0; i < objectV.Len(); i++ {
-			if element == objectV.Index(i).Interface() {
-				cond.result = true
+		AssertEqual(objV.Type().Elem(), elemV.Type())
+		for i := 0; i < objV.Len(); i++ {
+			if elem == objV.Index(i).Interface() {
+				result = true
 				break
 			}
 		}
-		return cond
 	case reflect.String:
-		AssertIs(element, reflect.Int32, reflect.String)
-		var cond = Condition{
-			result:   false,
-			trueMsg:  "string contains the element",
-			falseMsg: "string doesn't contain the element",
-		}
-		switch elementV.Kind() {
+		AssertIs(elem, reflect.String, reflect.Int32)
+		switch elemV.Kind() {
 		case reflect.Int32:
-			cond.result = strings.ContainsRune(object.(string), element.(rune))
+			result = strings.ContainsRune(obj.(string), elem.(rune))
+			elem = strconv.QuoteRune(elem.(rune))
 		case reflect.String:
-			cond.result = strings.Contains(object.(string), element.(string))
+			result = strings.Contains(obj.(string), elem.(string))
+			elem = strconv.Quote(elem.(string))
 		}
-		return cond
+		obj = strconv.Quote(obj.(string))
 	}
 
-	return Condition{
-		result:   false,
-		trueMsg:  "an unknown error occurred",
-		falseMsg: "an unknown error occurred",
+	var cond = Condition{
+		result:   result,
+		trueMsg:  fmt.Sprintf("%v IN %v", elem, obj),
+		falseMsg: fmt.Sprintf("%v NOT IN %v", elem, obj),
 	}
+
+	return cond
 }
 
 // ExpectNotIn returns a true Condition if the element is not in the object
