@@ -35,8 +35,8 @@ func TestAssertGreaterThan(t *testing.T) {
 }
 
 func TestAssertPanic(t *testing.T) {
-	xycond.AssertPanic(func() { panic("") })
-	xycond.AssertNotPanic(func() {})
+	xycond.AssertPanic("", func() { panic("") })
+	xycond.AssertPanic(nil, func() {})
 }
 
 func TestAssertZero(t *testing.T) {

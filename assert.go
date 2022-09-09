@@ -33,13 +33,8 @@ func AssertNotGreaterThan[t number](a, b t) {
 }
 
 // AssertPanic panics if the function doesn't panic.
-func AssertPanic(f func()) {
-	ExpectPanic(f).assert()
-}
-
-// AssertNotPanic panics if the function panics.
-func AssertNotPanic(f func()) {
-	ExpectNotPanic(f).assert()
+func AssertPanic(r any, f func()) {
+	ExpectPanic(r, f).assert()
 }
 
 // AssertZero panics if the parameter is not zero.

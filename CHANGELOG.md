@@ -1,9 +1,9 @@
-# Developing
+# V1.0.0-developing
 
--   Add ExpectIn supports to check if an element is in object.
 -   Fix bugs.
--   Split Panic to f and non-f functions.
+-   Add ExpectIn supports to check if an element is in an object.
 -   Allow to customize assertion message.
+-   ExpectPanic now needs the exact recover data to expect.
 
 # V0.0.1 (Sep 02, 2022)
 

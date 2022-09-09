@@ -40,8 +40,8 @@ func TestExpectGreaterThan(t *testing.T) {
 }
 
 func TestExpectPanic(t *testing.T) {
-	xycond.ExpectPanic(func() { panic("") }).Test(t)
-	xycond.ExpectNotPanic(func() {}).Test(t)
+	xycond.ExpectPanic("", func() { panic("") }).Test(t)
+	xycond.ExpectPanic(nil, func() {}).Test(t)
 }
 
 func TestExpectZero(t *testing.T) {
@@ -147,10 +147,18 @@ func TestExpectInWithString(t *testing.T) {
 }
 
 func TestExpectInInvalid(t *testing.T) {
-	xycond.ExpectPanic(func() { xycond.ExpectIn(1, 2) }).Test(t)
-	xycond.ExpectPanic(func() { xycond.ExpectIn(1, []string{}) }).Test(t)
-	xycond.ExpectPanic(func() { xycond.ExpectIn(1, map[float32]int{}) }).Test(t)
-	xycond.ExpectPanic(func() { xycond.ExpectIn(1, "") }).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.ExpectIn(1, 2)
+	}).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.ExpectIn(1, []string{})
+	}).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.ExpectIn(1, map[float32]int{})
+	}).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.ExpectIn(1, "")
+	}).Test(t)
 }
 
 func TestExpectTrue(t *testing.T) {
@@ -159,12 +167,22 @@ func TestExpectTrue(t *testing.T) {
 }
 
 func TestExpectAssert(t *testing.T) {
-	xycond.ExpectPanic(func() { xycond.ExpectFalse(true).Assert("") }).Test(t)
-	xycond.ExpectPanic(func() { xycond.ExpectFalse(true).Assertf("") }).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.ExpectFalse(true).Assert("")
+	}).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.ExpectFalse(true).Assertf("")
+	}).Test(t)
 }
 
 func TestPanic(t *testing.T) {
-	xycond.ExpectPanic(func() { xycond.Panic("") }).Test(t)
-	xycond.ExpectPanic(func() { xycond.Panicf("") }).Test(t)
-	xycond.ExpectPanic(func() { xycond.JustPanic() }).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.Panic("")
+	}).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.Panicf("")
+	}).Test(t)
+	xycond.ExpectPanic(xyerror.AssertionError, func() {
+		xycond.JustPanic()
+	}).Test(t)
 }
