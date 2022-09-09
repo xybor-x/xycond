@@ -263,6 +263,9 @@ func ExpectErrorNot(err error, targets ...error) Condition {
 func ExpectIn(elem any, obj any) Condition {
 	AssertIs(obj, reflect.Array, reflect.Slice, reflect.String, reflect.Map)
 
+	var elemCopy = elem
+	var objCopy = obj
+
 	var objV = reflect.ValueOf(obj)
 	var elemV = reflect.ValueOf(elem)
 
@@ -271,9 +274,19 @@ func ExpectIn(elem any, obj any) Condition {
 	switch objV.Kind() {
 	case reflect.Map:
 		AssertEqual(objV.Type().Key(), elemV.Type())
+		if objV.Len() > 10 {
+			objCopy = "[...]"
+		}
 		result = objV.MapIndex(elemV) != reflect.Value{}
 	case reflect.Slice, reflect.Array:
 		AssertEqual(objV.Type().Elem(), elemV.Type())
+		if objV.Len() > 10 {
+			objCopy = ""
+			for i := 0; i < 10; i++ {
+				objCopy = fmt.Sprintf("%s, %s", objCopy, objV.Index(i))
+			}
+			objCopy = fmt.Sprintf("[%s]", objCopy)
+		}
 		for i := 0; i < objV.Len(); i++ {
 			if elem == objV.Index(i).Interface() {
 				result = true
@@ -281,22 +294,22 @@ func ExpectIn(elem any, obj any) Condition {
 			}
 		}
 	case reflect.String:
-		AssertIs(elem, reflect.String, reflect.Int32)
+		AssertIs(elem, reflect.String, reflect.Int32, reflect.Uint8)
+		objCopy = strconv.Quote(objCopy.(string))
 		switch elemV.Kind() {
 		case reflect.Int32:
+			elemCopy = strconv.QuoteRune(elemCopy.(rune))
 			result = strings.ContainsRune(obj.(string), elem.(rune))
-			elem = strconv.QuoteRune(elem.(rune))
 		case reflect.String:
+			elemCopy = strconv.Quote(elemCopy.(string))
 			result = strings.Contains(obj.(string), elem.(string))
-			elem = strconv.Quote(elem.(string))
 		}
-		obj = strconv.Quote(obj.(string))
 	}
 
 	var cond = Condition{
 		result:   result,
-		trueMsg:  fmt.Sprintf("%v IN %v", elem, obj),
-		falseMsg: fmt.Sprintf("%v NOT IN %v", elem, obj),
+		trueMsg:  fmt.Sprintf("%v IN %v", elemCopy, objCopy),
+		falseMsg: fmt.Sprintf("%v NOT IN %v", elemCopy, objCopy),
 	}
 
 	return cond
