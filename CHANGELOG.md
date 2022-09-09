@@ -4,6 +4,7 @@
 -   Add ExpectIn supports to check if an element is in an object.
 -   Allow to customize assertion message.
 -   ExpectPanic now needs the exact recover data to expect.
+-   Improve performance.
 
 # V0.0.1 (Sep 02, 2022)
 

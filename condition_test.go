@@ -14,136 +14,73 @@ func (mocktest) Fail() {}
 
 func TestCondition(t *testing.T) {
 	xycond.ExpectTrue(false).Test(mocktest{})
-	xycond.ExpectTrue(false).True(func() {
-		t.Fail()
-	})
-	xycond.ExpectTrue(true).False(func() {
-		t.Fail()
-	})
+
+	xycond.ExpectTrue(false).
+		True(t.Fail).
+		False(func() {})
+	xycond.ExpectTrue(true).
+		True(func() {}).
+		False(t.Fail)
 }
 
-func TestExpectEqual(t *testing.T) {
-	xycond.ExpectEqual(1, 1).Test(t)
-	xycond.ExpectNotEqual(1, 2).Test(t)
-}
-
-func TestExpectLessThan(t *testing.T) {
-	xycond.ExpectLessThan(1, 2).Test(t)
-	xycond.ExpectNotLessThan(1, 0).Test(t)
-	xycond.ExpectNotLessThan(1, 1).Test(t)
-}
-
-func TestExpectGreaterThan(t *testing.T) {
-	xycond.ExpectGreaterThan(1, 0).Test(t)
-	xycond.ExpectNotGreaterThan(1, 1).Test(t)
-	xycond.ExpectNotGreaterThan(1, 2).Test(t)
-}
-
-func TestExpectPanic(t *testing.T) {
-	xycond.ExpectPanic("", func() { panic("") }).Test(t)
-	xycond.ExpectPanic(nil, func() {}).Test(t)
-}
-
-func TestExpectZero(t *testing.T) {
-	xycond.ExpectZero(0).Test(t)
-	xycond.ExpectNotZero(1).Test(t)
-}
-
-func TestExpectNil(t *testing.T) {
+func TestXxx(t *testing.T) {
 	var x *int
-	xycond.ExpectNil(x).Test(t)
-	xycond.ExpectNil(nil).Test(t)
-
-	var a = make([]int, 0)
-	xycond.ExpectNotNil(a).Test(t)
-	xycond.ExpectNotNil(new(int)).Test(t)
-
-	var err error = xyerror.AssertionError.New("foo")
-	xycond.ExpectNotNil(err).Test(t)
-}
-
-func TestExpectEmpty(t *testing.T) {
-	xycond.ExpectEmpty("").Test(t)
-	xycond.ExpectEmpty([]int{}).Test(t)
-	xycond.ExpectEmpty([]int{1, 2, 3}[0:0]).Test(t)
-
-	xycond.ExpectNotEmpty("a").Test(t)
-	xycond.ExpectNotEmpty([]int{1}).Test(t)
-	xycond.ExpectNotEmpty([1]int{1}).Test(t)
-}
-
-func TestExpectIs(t *testing.T) {
-	var tests = map[any]reflect.Kind{
-		1:     reflect.Int,
-		"foo": reflect.String,
-		1.1:   reflect.Float64,
-		true:  reflect.Bool,
-		'c':   reflect.Int32,
+	var tests = []xycond.Condition{
+		xycond.ExpectTrue(false),
+		xycond.ExpectFalse(true),
+		xycond.ExpectEqual(1, 2),
+		xycond.ExpectNotEqual(1, 1),
+		xycond.ExpectLessThan(1, 0),
+		xycond.ExpectNotLessThan(1, 2),
+		xycond.ExpectGreaterThan(1, 2),
+		xycond.ExpectNotGreaterThan(1, 0),
+		xycond.ExpectPanic("", func() {}),
+		xycond.ExpectPanic(nil, func() { panic("") }),
+		xycond.ExpectZero(1),
+		xycond.ExpectNotZero(0),
+		xycond.ExpectNil(new(int)),
+		xycond.ExpectNil(make([]int, 0)),
+		xycond.ExpectNil(xyerror.AssertionError.New("foo")),
+		xycond.ExpectNotNil(nil),
+		xycond.ExpectNotNil(x),
+		xycond.ExpectEmpty("a"),
+		xycond.ExpectEmpty([]int{1}),
+		xycond.ExpectEmpty([1]int{1}),
+		xycond.ExpectNotEmpty(""),
+		xycond.ExpectNotEmpty([]int{}),
+		xycond.ExpectNotEmpty([]int{1, 2, 3}[0:0]),
+		xycond.ExpectIs(3, reflect.String),
+		xycond.ExpectIsNot(3, reflect.Int),
+		xycond.ExpectSame(1, "a"),
+		xycond.ExpectSame(1, '3'),
+		xycond.ExpectSame("a", 1),
+		xycond.ExpectSame("a", 1),
+		xycond.ExpectSame(1, 2, 3, "a"),
+		xycond.ExpectSame([]int{1}, [1]int{1}),
+		xycond.ExpectNotSame(1, 2),
+		xycond.ExpectNotSame(1, 2, 3, 4, 5),
+		xycond.ExpectNotSame(make(chan int), make(chan int)),
+		xycond.ExpectWritable(make(<-chan int)),
+		xycond.ExpectNotWritable(make(chan int)),
+		xycond.ExpectNotWritable(make(chan<- int)),
+		xycond.ExpectReadable(make(chan<- int)),
+		xycond.ExpectNotReadable(make(chan int)),
+		xycond.ExpectNotReadable(make(<-chan int)),
+		xycond.ExpectError(xyerror.ValueError.New(""), xyerror.KeyError),
+		xycond.ExpectErrorNot(xyerror.ValueError.New(""), xyerror.ValueError),
+		xycond.ExpectIn(3, map[int]string{1: "foo"}),
+		xycond.ExpectIn("buzz", []string{"foo"}),
+		xycond.ExpectIn("buzz", "foo bar"),
+		xycond.ExpectNotIn(1, map[int]string{1: "foo"}),
+		xycond.ExpectNotIn("foo", []string{"foo"}),
+		xycond.ExpectNotIn("foo", "foo bar"),
 	}
 
-	for value, kind := range tests {
-		xycond.ExpectIs(value, kind).Test(t)
-		xycond.ExpectIsNot(value, kind+1).Test(t)
+	for i := range tests {
+		xycond.ExpectPanic(xyerror.AssertionError, func() {
+			tests[i].Assert("")
+		}).Test(t)
 	}
-}
-
-func TestExpectSame(t *testing.T) {
-	xycond.ExpectSame(1, 2).Test(t)
-	xycond.ExpectSame(1, 2, 3, 4, 5).Test(t)
-	xycond.ExpectSame(make(chan int), make(chan int)).Test(t)
-
-	xycond.ExpectNotSame(1, "a").Test(t)
-	xycond.ExpectNotSame(1, '3').Test(t)
-	xycond.ExpectNotSame("a", 1).Test(t)
-	xycond.ExpectNotSame(1, 2, 3, "a").Test(t)
-	xycond.ExpectNotSame([]int{1}, [1]int{1}).Test(t)
-}
-
-func TestExpectWritable(t *testing.T) {
-	var receive = make(<-chan int)
-	var both = make(chan int)
-	var send = make(chan<- int)
-
-	xycond.ExpectWritable(both).Test(t)
-	xycond.ExpectWritable(send).Test(t)
-	xycond.ExpectNotWritable(receive).Test(t)
-}
-
-func TestExpectReadable(t *testing.T) {
-	var send = make(chan<- int)
-	var both = make(chan int)
-	var receive = make(<-chan int)
-
-	xycond.ExpectReadable(both).Test(t)
-	xycond.ExpectReadable(receive).Test(t)
-	xycond.ExpectNotReadable(send).Test(t)
-}
-
-func TestExpectError(t *testing.T) {
-	var err = xyerror.ValueError.New("")
-	xycond.ExpectError(err, xyerror.ValueError).Test(t)
-	xycond.ExpectErrorNot(err, xyerror.AssertionError).Test(t)
-}
-
-func TestExpectInWithMap(t *testing.T) {
-	var m = map[int]string{1: "foo", 2: "bar"}
-	xycond.ExpectIn(1, m).Test(t)
-	xycond.ExpectIn(2, m).Test(t)
-	xycond.ExpectNotIn(3, m).Test(t)
-}
-
-func TestExpectInWithArray(t *testing.T) {
-	var a = []string{"foo", "bar"}
-	xycond.ExpectIn("foo", a).Test(t)
-	xycond.ExpectIn("bar", a).Test(t)
-	xycond.ExpectNotIn("buzz", a).Test(t)
-}
-
-func TestExpectInWithString(t *testing.T) {
-	var s = "foo bar"
-	xycond.ExpectIn("foo", s).Test(t)
-	xycond.ExpectIn('b', s).Test(t)
-	xycond.ExpectNotIn("buzz", s).Test(t)
 }
 
 func TestExpectInInvalid(t *testing.T) {
@@ -168,10 +105,10 @@ func TestExpectTrue(t *testing.T) {
 
 func TestExpectAssert(t *testing.T) {
 	xycond.ExpectPanic(xyerror.AssertionError, func() {
-		xycond.ExpectFalse(true).Assert("")
+		xycond.ExpectFalse(true).Assert("foo")
 	}).Test(t)
 	xycond.ExpectPanic(xyerror.AssertionError, func() {
-		xycond.ExpectFalse(true).Assertf("")
+		xycond.ExpectFalse(true).Assertf("foo")
 	}).Test(t)
 }
 

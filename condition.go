@@ -26,54 +26,72 @@ type failer interface {
 	Fail()
 }
 
+type operator int
+
+const (
+	opEqual operator = iota
+	opNotEqual
+	opLessThan
+	opNotLessThan
+	opGreaterThan
+	opNotGreaterThan
+	opPanic
+	opNil
+	opNotNil
+	opEmpty
+	opNotEmpty
+	opIs
+	opIsNot
+	opSame
+	opNotSame
+	opWritable
+	opNotWritable
+	opReadable
+	opNotReadable
+	opError
+	opErrorNot
+	opIn
+	opNotIn
+	opTrue
+	opFalse
+)
+
 // ExpectEqual returns a true Condition if the two values are equal.
 func ExpectEqual(a, b any) Condition {
-	return Condition{
-		result:   a == b,
-		trueMsg:  fmt.Sprintf("%v == %v", a, b),
-		falseMsg: fmt.Sprintf("%v != %v", a, b),
-	}
+	return Condition{result: a == b, op: opEqual, params: []any{a, b}}
 }
 
 // ExpectNotEqual returns a true Condition if the two values are not equal.
 func ExpectNotEqual(a, b any) Condition {
-	return ExpectEqual(a, b).revert()
+	return ExpectEqual(a, b).revert(opNotEqual)
 }
 
 // ExpectLessThan returns a true Condition if the first parameter is less than
 // the second.
 func ExpectLessThan[t number](a, b t) Condition {
-	return Condition{
-		result:   a < b,
-		trueMsg:  fmt.Sprintf("%v is less than %v", a, b),
-		falseMsg: fmt.Sprintf("%v is not less than %v", a, b),
-	}
+	return Condition{result: a < b, op: opLessThan, params: []any{a, b}}
 }
 
 // ExpectNotLessThan returns a true Condition if the first parameter is not less
 // than the second.
 func ExpectNotLessThan[t number](a, b t) Condition {
-	return ExpectLessThan(a, b).revert()
+	return ExpectLessThan(a, b).revert(opNotLessThan)
 }
 
 // ExpectGreaterThan returns a true Condition if the first parameter is greater
 // than the second.
 func ExpectGreaterThan[t number](a, b t) Condition {
-	return Condition{
-		result:   a > b,
-		trueMsg:  fmt.Sprintf("%v is greater than %v", a, b),
-		falseMsg: fmt.Sprintf("%v is not greater than %v", a, b),
-	}
+	return Condition{result: a > b, op: opGreaterThan, params: []any{a, b}}
 }
 
 // ExpectNotGreaterThan returns a true Condition if the first parameter is not
 // greater than the second.
 func ExpectNotGreaterThan[t number](a, b t) Condition {
-	return ExpectGreaterThan(a, b).revert()
+	return ExpectGreaterThan(a, b).revert(opNotGreaterThan)
 }
 
-// ExpectPanic returns a true Condition if it found a panic after calling
-// function.
+// ExpectPanic returns a true Condition if it found a panic with a correct data
+// after calling the function.
 func ExpectPanic(r any, f func()) (c Condition) {
 	defer func() {
 		var data = recover()
@@ -86,14 +104,8 @@ func ExpectPanic(r any, f func()) (c Condition) {
 		} else {
 			c.result = data == r
 		}
-
-		if r == nil {
-			c.trueMsg = "no panic occurred"
-			c.falseMsg = fmt.Sprintf("got a panic (%v)", data)
-		} else {
-			c.trueMsg = fmt.Sprintf("got the correct panic (%v)", data)
-			c.falseMsg = fmt.Sprintf("got an incorrect panic (%v)", data)
-		}
+		c.op = opPanic
+		c.params = []any{r, data}
 	}()
 
 	f()
@@ -102,22 +114,19 @@ func ExpectPanic(r any, f func()) (c Condition) {
 
 // ExpectZero returns a true Condition if the parameter is zero.
 func ExpectZero[T number](a T) Condition {
-	var zero T = 0
+	var zero T
 	return ExpectEqual(a, zero)
 }
 
 // ExpectNotZero returns a true Condition if the parameter is not zero.
 func ExpectNotZero[T number](a T) Condition {
-	return ExpectZero(a).revert()
+	var zero T = 0
+	return ExpectNotEqual(a, zero)
 }
 
 // ExpectNil returns a true Condition if the parameter is nil.
 func ExpectNil(a any) Condition {
-	var cond = Condition{
-		result:   false,
-		trueMsg:  "got a nil value",
-		falseMsg: fmt.Sprintf("got a not-nil value: %v", a),
-	}
+	var cond = Condition{result: false, op: opNil, params: []any{a}}
 
 	if a == nil {
 		cond.result = true
@@ -135,7 +144,7 @@ func ExpectNil(a any) Condition {
 
 // ExpectNotNil returns a true Condition if the parameter is not nil.
 func ExpectNotNil(a any) Condition {
-	return ExpectNil(a).revert()
+	return ExpectNil(a).revert(opNotNil)
 }
 
 // ExpectEmpty returns a true Condition if the parameter is an empty string,
@@ -143,63 +152,56 @@ func ExpectNotNil(a any) Condition {
 func ExpectEmpty(a any) Condition {
 	var va = reflect.ValueOf(a)
 	return Condition{
-		result:   va.Len() == 0,
-		trueMsg:  fmt.Sprintf("got an empty %s", va.Kind()),
-		falseMsg: fmt.Sprintf("got a not empty %s (%v)", va.Kind(), a),
+		result: va.Len() == 0,
+		op:     opEmpty, params: []any{a, va.Kind()},
 	}
 }
 
 // ExpectNotEmpty returns a true Condition if the parameter is not an empty
 // string, slice, array, or channel.
 func ExpectNotEmpty(a any) Condition {
-	return ExpectEmpty(a).revert()
+	return ExpectEmpty(a).revert(opNotEmpty)
 }
 
 // ExpectIs returns a true Condition if value belongs to one of passed kinds.
 func ExpectIs(v any, kinds ...reflect.Kind) Condition {
 	var kindV = reflect.TypeOf(v).Kind()
-	var result = false
+	var cond = Condition{result: false, op: opIs}
 	for i := range kinds {
 		if kindV == kinds[i] {
-			result = true
+			cond.result = true
 		}
 	}
-	return Condition{
-		result:   result,
-		trueMsg:  fmt.Sprintf("the value is %s", kindV),
-		falseMsg: fmt.Sprintf("the value is %s, not %v", kindV, kinds),
-	}
+	cond.params = []any{kindV, kinds}
+	return cond
 }
 
 // ExpectIsNot returns a true Condition if value doesn't belong to any passed
 // kinds.
 func ExpectIsNot(v any, kinds ...reflect.Kind) Condition {
-	return ExpectIs(v, kinds...).revert()
+	return ExpectIs(v, kinds...).revert(opIsNot)
 }
 
 // ExpectSame returns a true Condition if parameters are the same type.
 func ExpectSame(v ...any) Condition {
 	var t0 = reflect.TypeOf(v[0])
-	var result = true
+	var cond = Condition{result: true, op: opSame}
 	var types = []string{fmt.Sprint(t0)}
 	for i := 1; i < len(v); i++ {
 		var ti = reflect.TypeOf(v[i])
 		if t0 != ti {
-			result = false
+			cond.result = false
 		}
 		types = append(types, fmt.Sprint(ti))
 	}
-	return Condition{
-		result:   result,
-		trueMsg:  fmt.Sprintf("all value are the same type (%s)", t0),
-		falseMsg: strings.Join(types, "-"),
-	}
+	cond.params = []any{v}
+	return cond
 }
 
-// ExpectNotSameType returns a true Condition if there is at least one value
-// whose type is different from the rest.
+// ExpectNotSame returns a true Condition if there is at least one value whose
+// type is different from the rest.
 func ExpectNotSame(v ...any) Condition {
-	return ExpectSame(v...).revert()
+	return ExpectSame(v...).revert(opNotSame)
 }
 
 // ExpectWritable returns a true Condition if the channel is writable.
@@ -207,15 +209,14 @@ func ExpectWritable(c any) Condition {
 	AssertIs(c, reflect.Chan)
 	var dir = reflect.TypeOf(c).ChanDir()
 	return Condition{
-		result:   dir == reflect.BothDir || dir == reflect.SendDir,
-		trueMsg:  "channel is writable",
-		falseMsg: "channel is not writable",
+		result: dir == reflect.BothDir || dir == reflect.SendDir,
+		op:     opWritable,
 	}
 }
 
 // ExpectNotWritable returns a true Condition if the channel is not writable.
 func ExpectNotWritable(c any) Condition {
-	return ExpectWritable(c).revert()
+	return ExpectWritable(c).revert(opNotWritable)
 }
 
 // ExpectReadable returns a true Condition if the channel is readable.
@@ -223,116 +224,91 @@ func ExpectReadable(c any) Condition {
 	AssertIs(c, reflect.Chan)
 	var dir = reflect.TypeOf(c).ChanDir()
 	return Condition{
-		result:   dir == reflect.BothDir || dir == reflect.RecvDir,
-		trueMsg:  "channel is readable",
-		falseMsg: "channel is not readable",
+		result: dir == reflect.BothDir || dir == reflect.RecvDir,
+		op:     opReadable,
 	}
 }
 
 // ExpectNotReadable returns a true Condition if the channel is not readable.
 func ExpectNotReadable(c any) Condition {
-	return ExpectReadable(c).revert()
+	return ExpectReadable(c).revert(opNotReadable)
 }
 
 // ExpectError returns a true Condition if err belongs to one of the passed
 // targets.
 func ExpectError(err error, targets ...error) Condition {
-	var result = false
-	var trueTarget error
+	var cond = Condition{result: false, op: opError}
 	for i := range targets {
 		if errors.Is(err, targets[i]) {
-			result = true
-			trueTarget = targets[i]
+			cond.result = true
 		}
 	}
-	return Condition{
-		result:   result,
-		trueMsg:  fmt.Sprintf("err is %v", trueTarget),
-		falseMsg: fmt.Sprintf("err doesn't belong to any targets (%s)", err),
-	}
+	cond.params = []any{err, targets}
+	return cond
 }
 
 // ExpectErrorNot returns a true Condition if the err doesn't belong to any
 // targets.
 func ExpectErrorNot(err error, targets ...error) Condition {
-	return ExpectError(err, targets...).revert()
+	return ExpectError(err, targets...).revert(opErrorNot)
 }
 
-// ExpectIn returns a true Condition if the element is in the object which must
-// be an array, slice, string, or map.
+// ExpectIn returns a true Condition if the element is in the object. The object
+// must be an array, slice, string, or map.
 func ExpectIn(elem any, obj any) Condition {
 	AssertIs(obj, reflect.Array, reflect.Slice, reflect.String, reflect.Map)
-
-	var elemCopy = elem
-	var objCopy = obj
 
 	var objV = reflect.ValueOf(obj)
 	var elemV = reflect.ValueOf(elem)
 
-	var result = false
+	var cond = Condition{
+		result: false,
+		op:     opIn,
+	}
 
 	switch objV.Kind() {
 	case reflect.Map:
 		AssertEqual(objV.Type().Key(), elemV.Type())
-		if objV.Len() > 10 {
-			objCopy = "[...]"
-		}
-		result = objV.MapIndex(elemV) != reflect.Value{}
+		cond.result = objV.MapIndex(elemV) != reflect.Value{}
+		cond.params = []any{elem, "map"}
 	case reflect.Slice, reflect.Array:
 		AssertEqual(objV.Type().Elem(), elemV.Type())
-		if objV.Len() > 10 {
-			objCopy = ""
-			for i := 0; i < 10; i++ {
-				objCopy = fmt.Sprintf("%s, %s", objCopy, objV.Index(i))
-			}
-			objCopy = fmt.Sprintf("[%s]", objCopy)
-		}
 		for i := 0; i < objV.Len(); i++ {
 			if elem == objV.Index(i).Interface() {
-				result = true
+				cond.result = true
 				break
 			}
 		}
+		cond.params = []any{elem, "array"}
 	case reflect.String:
 		AssertIs(elem, reflect.String, reflect.Int32, reflect.Uint8)
-		objCopy = strconv.Quote(objCopy.(string))
 		switch elemV.Kind() {
 		case reflect.Int32:
-			elemCopy = strconv.QuoteRune(elemCopy.(rune))
-			result = strings.ContainsRune(obj.(string), elem.(rune))
+			cond.result = strings.ContainsRune(obj.(string), elem.(rune))
+			cond.params = []any{strconv.QuoteRune(elem.(rune)), obj}
 		case reflect.String:
-			elemCopy = strconv.Quote(elemCopy.(string))
-			result = strings.Contains(obj.(string), elem.(string))
+			cond.result = strings.Contains(obj.(string), elem.(string))
+			cond.params = []any{strconv.Quote(elem.(string)), obj}
 		}
-	}
-
-	var cond = Condition{
-		result:   result,
-		trueMsg:  fmt.Sprintf("%v IN %v", elemCopy, objCopy),
-		falseMsg: fmt.Sprintf("%v NOT IN %v", elemCopy, objCopy),
 	}
 
 	return cond
 }
 
-// ExpectNotIn returns a true Condition if the element is not in the object
-// which must be an array, slice, string, or map.
+// ExpectNotIn returns a true Condition if the element is not in the object. The
+// object must be an array, slice, string, or map.
 func ExpectNotIn(object any, element any) Condition {
-	return ExpectIn(object, element).revert()
+	return ExpectIn(object, element).revert(opNotIn)
 }
 
 // ExpectTrue returns true if the the parameter is true.
 func ExpectTrue(b bool) Condition {
-	return Condition{
-		result:   b,
-		trueMsg:  "the condition is true",
-		falseMsg: "the condition is false",
-	}
+	return Condition{result: b, op: opTrue}
 }
 
 // ExpectFalse returns a true Condition if the parameter is false.
 func ExpectFalse(b bool) Condition {
-	return ExpectTrue(b).revert()
+	return ExpectTrue(b).revert(opFalse)
 }
 
 // Panicf panics with a formatted string.
@@ -340,7 +316,7 @@ func Panicf(msg string, a ...any) any {
 	panic(xyerror.AssertionError.Newf(msg, a...))
 }
 
-// Panicf panics with default formatted objects.
+// Panic panics with default formatted objects.
 func Panic(a ...any) any {
 	panic(xyerror.AssertionError.New(a...))
 }
@@ -352,28 +328,33 @@ func JustPanic() {
 
 // Condition supports to perform actions on expectation.
 type Condition struct {
-	result   bool
-	trueMsg  string
-	falseMsg string
+	result bool
+	op     operator
+	params []any
 }
 
 // Test will call Fail method if it is a false Condition. It is used while
 // testing, with *testing.T or *testing.B.
 func (c Condition) Test(f failer) {
-	if !c.result {
-		var _, fn, ln, ok = runtime.Caller(1)
-		if ok {
-			fmt.Printf("%s:%d: ", fn, ln)
-		}
-		fmt.Println(c.falseMsg)
-		f.Fail()
+	if c.result {
+		return
 	}
+	var _, fn, ln, ok = runtime.Caller(1)
+	if ok {
+		fmt.Printf("%s:%d: ", fn, ln)
+	}
+	fmt.Println(c.generateMessage())
+	f.Fail()
 }
 
 // Assert prints the message and panics if it is a false Condition.
 func (c Condition) Assert(msg string) {
 	if !c.result {
-		Panic(msg)
+		if msg != "" {
+			Panic(msg)
+		} else {
+			Panic(c.generateMessage())
+		}
 	}
 }
 
@@ -400,18 +381,90 @@ func (c Condition) False(f func()) Condition {
 	return c
 }
 
-// assert prints the false message and panics if it is a false Condition.
-func (c Condition) assert() {
-	if !c.result {
-		Panic(c.falseMsg)
-	}
+// revert returns the reverse Condition.
+func (c Condition) revert(op operator) Condition {
+	return Condition{result: !c.result, op: op, params: c.params}
 }
 
-// revert returns the reverse Condition.
-func (c Condition) revert() Condition {
-	return Condition{
-		result:   !c.result,
-		trueMsg:  c.falseMsg,
-		falseMsg: c.trueMsg,
+func (c Condition) generateMessage() string {
+	switch c.op {
+	case opEqual:
+		return fmt.Sprintf("%v != %v", c.params[0], c.params[1])
+	case opNotEqual:
+		return fmt.Sprintf("got the same value (%v)", c.params[0])
+	case opLessThan:
+		return fmt.Sprintf("%v is not less than %v", c.params[0], c.params[1])
+	case opNotLessThan:
+		return fmt.Sprintf("%v is less than %v", c.params[0], c.params[1])
+	case opGreaterThan:
+		return fmt.Sprintf("%v is not greater than %v", c.params[0], c.params[1])
+	case opNotGreaterThan:
+		return fmt.Sprintf("%v is greater than %v", c.params[0], c.params[1])
+	case opPanic:
+		if c.params[0] == nil {
+			return fmt.Sprintf("expect no panic, but got %v", c.params[1])
+		}
+		return fmt.Sprintf("expect a panic of %v, but got %v",
+			c.params[0], c.params[1])
+	case opNil:
+		return fmt.Sprintf("expect a nil value, but got %v", c.params[0])
+	case opNotNil:
+		return "expect a not nil value, but got nil"
+	case opEmpty:
+		return fmt.Sprintf("expect a empty %s, but got %v",
+			c.params[1], c.params[0])
+	case opNotEmpty:
+		return fmt.Sprintf("expect a not empty %s, but got empty", c.params[1])
+	case opIs:
+		return fmt.Sprintf("expect a value in %v, but got %v",
+			c.params[1], c.params[0])
+	case opIsNot:
+		return fmt.Sprintf("expect a value not in %v, but got %v",
+			c.params[1], c.params[0])
+	case opSame:
+		var values = c.params[0].([]any)
+		var types []reflect.Type
+		for i := range values {
+			var diff = true
+			var vt = reflect.TypeOf(values[i])
+			for j := range types {
+				if vt == types[j] {
+					diff = false
+				}
+			}
+			if diff {
+				types = append(types, vt)
+			}
+		}
+		return fmt.Sprintf("expect values to be the same type, but got %v",
+			types)
+	case opNotSame:
+		var values = c.params[0].([]any)
+		return fmt.Sprintf(
+			"expect values to be not the same type, but got only %v",
+			reflect.TypeOf(values[0]))
+	case opWritable:
+		return "expect a wrtiable channel, but it's not"
+	case opNotWritable:
+		return "expect not a wrtiable channel, but it is"
+	case opReadable:
+		return "expect a readable channel, but it's not"
+	case opNotReadable:
+		return "expect not a readable channel, but it is"
+	case opError:
+		return fmt.Sprintf("expect a error in %v, but got %v",
+			c.params[1], c.params[0])
+	case opErrorNot:
+		return fmt.Sprintf("expect a error not in %v, but got %v",
+			c.params[1], c.params[0])
+	case opIn:
+		return fmt.Sprintf("%v NOT IN %v", c.params[0], c.params[1])
+	case opNotIn:
+		return fmt.Sprintf("%v IN %v", c.params[0], c.params[1])
+	case opTrue:
+		return "expect true, but got false"
+	case opFalse:
+		return "expect false, but got true"
 	}
+	panic("no available operator")
 }
