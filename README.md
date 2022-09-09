@@ -22,6 +22,23 @@ This package has the following features:
 -   Expect a condition to occur and perform actions on this expectation.
 -   Panic with an assertion error.
 
+# Benchmark
+
+$\\mu$
+
+## ExpectIn
+
+| op                  | time per op |
+| ------------------- | ----------: |
+| large-map           |       293ns |
+| small-map           |       209ns |
+| large-array         |    196507ns |
+| small-array         |       375ns |
+| large-string-string |    115002ns |
+| small-string-string |       455ns |
+| large-string-rune   |       194ns |
+| small-string-rune   |       192ns |
+
 # Example
 
 1.  Assert conditions
