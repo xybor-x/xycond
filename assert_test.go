@@ -112,23 +112,23 @@ func TestAssertError(t *testing.T) {
 
 func TestAssertInWithMap(t *testing.T) {
 	var m = map[int]string{1: "foo", 2: "bar"}
-	xycond.AssertIn(m, 1)
-	xycond.AssertIn(m, 2)
-	xycond.AssertNotIn(m, 3)
+	xycond.AssertIn(1, m)
+	xycond.AssertIn(2, m)
+	xycond.AssertNotIn(3, m)
 }
 
 func TestAssertInWithArray(t *testing.T) {
-	var a = []float64{0.1, 0.2}
-	xycond.AssertIn(a, 0.1)
-	xycond.AssertIn(a, 0.2)
-	xycond.AssertNotIn(a, 0.3)
+	var a = []string{"foo", "bar"}
+	xycond.AssertIn("foo", a)
+	xycond.AssertIn("bar", a)
+	xycond.AssertNotIn("buzz", a)
 }
 
 func TestAssertInWithString(t *testing.T) {
 	var s = "foo bar"
-	xycond.AssertIn(s, "foo")
-	xycond.AssertIn(s, 'b')
-	xycond.AssertNotIn(s, "buzz")
+	xycond.AssertIn("foo", s)
+	xycond.AssertIn('b', s)
+	xycond.AssertNotIn("buzz", s)
 }
 
 func TestAssertTrue(t *testing.T) {

@@ -127,23 +127,30 @@ func TestExpectError(t *testing.T) {
 
 func TestExpectInWithMap(t *testing.T) {
 	var m = map[int]string{1: "foo", 2: "bar"}
-	xycond.ExpectIn(m, 1).Test(t)
-	xycond.ExpectIn(m, 2).Test(t)
-	xycond.ExpectNotIn(m, 3).Test(t)
+	xycond.ExpectIn(1, m).Test(t)
+	xycond.ExpectIn(2, m).Test(t)
+	xycond.ExpectNotIn(3, m).Test(t)
 }
 
 func TestExpectInWithArray(t *testing.T) {
-	var a = []float64{0.1, 0.2}
-	xycond.ExpectIn(a, 0.1).Test(t)
-	xycond.ExpectIn(a, 0.2).Test(t)
-	xycond.ExpectNotIn(a, 0.3).Test(t)
+	var a = []string{"foo", "bar"}
+	xycond.ExpectIn("foo", a).Test(t)
+	xycond.ExpectIn("bar", a).Test(t)
+	xycond.ExpectNotIn("buzz", a).Test(t)
 }
 
 func TestExpectInWithString(t *testing.T) {
 	var s = "foo bar"
-	xycond.ExpectIn(s, "foo").Test(t)
-	xycond.ExpectIn(s, 'b').Test(t)
-	xycond.ExpectNotIn(s, "buzz").Test(t)
+	xycond.ExpectIn("foo", s).Test(t)
+	xycond.ExpectIn('b', s).Test(t)
+	xycond.ExpectNotIn("buzz", s).Test(t)
+}
+
+func TestExpectInInvalid(t *testing.T) {
+	xycond.ExpectPanic(func() { xycond.ExpectIn(1, 2) }).Test(t)
+	xycond.ExpectPanic(func() { xycond.ExpectIn(1, []string{}) }).Test(t)
+	xycond.ExpectPanic(func() { xycond.ExpectIn(1, map[float32]int{}) }).Test(t)
+	xycond.ExpectPanic(func() { xycond.ExpectIn(1, "") }).Test(t)
 }
 
 func TestExpectTrue(t *testing.T) {
