@@ -24,8 +24,6 @@ This package has the following features:
 
 # Benchmark
 
-$\\mu$
-
 ## ExpectIn
 
 | op                  | time per op |

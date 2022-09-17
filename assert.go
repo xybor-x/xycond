@@ -117,16 +117,16 @@ func AssertErrorNot(err error, targets ...error) {
 	ExpectErrorNot(err, targets...).Assert("")
 }
 
-// AssertIn panics if the element is in the object which must be an array,
+// AssertIn panics if the element is in the object. The object must be an array,
 // slice, string, or map.
-func AssertIn(object any, element any) {
-	ExpectIn(object, element).Assert("")
+func AssertIn(element any, object any) {
+	ExpectIn(element, object).Assert("")
 }
 
-// AssertNotIn panics if the element is not in the object which must be an
+// AssertNotIn panics if the element is not in the object. The object must be an
 // array, slice, string, or map.
-func AssertNotIn(object any, element any) {
-	ExpectNotIn(object, element).Assert("")
+func AssertNotIn(element any, object any) {
+	ExpectNotIn(element, object).Assert("")
 }
 
 // AssertTrue panics if the condition is false.
