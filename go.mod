@@ -2,7 +2,7 @@ module github.com/xybor-x/xycond
 
 go 1.18
 
-require github.com/xybor-x/xyerror v0.1.0-alpha
+require github.com/xybor-x/xyerror v1.0.0
 
 require (
 	github.com/xybor-x/xylock v0.0.1 // indirect
